@@ -68,7 +68,7 @@ def get_ingredients(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="No ingredients found")
     return {"ingredients": [ing.name for ing in ingredients]}
 
-# openai.api_key = "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"  
+# openai.api_key = ""  
 # @app.post("/generate_recipe/")
 # def generate_recipe(request: RecipeRequest, db: Session = Depends(get_db)):
 #     ingredients = db.query(Ingredient).filter(Ingredient.user_id == request.user_id).all()
