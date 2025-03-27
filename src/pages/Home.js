@@ -1,6 +1,10 @@
 import "../styles.css";
 
 export default function Home() {
+    const handleButtonClick = () => {
+        window.location.href = "/login";
+    };
+
     return (
         <div className="home-container">
             <div className="flex-container">
@@ -12,17 +16,25 @@ export default function Home() {
                         <p style={{marginTop: "20px"}}>Save money, save food, save time.</p>
                         <p> A smarter way to eat for college students</p>
                     </div>
+                    <button className="outfit-font "
+                        style={{
+                            backgroundColor: "#9AC2D8",
+                            color: "#3E5B7F",
+                            padding: "10px 20px",
+                            fontSize: "40px",
+                            border: "none",
+                            borderRadius: "50px",
+                            cursor: "pointer",
+                            marginTop: "30px"
+                        }}
+                        onClick={handleButtonClick}
+                    >
+                        Get Started
+                    </button>
                 </div>
 
                 <div className="column">
-                    <p>This portal has been created to provide 
-                        well-thought and well-explained solutions 
-                        for selected questions.
-                    </p>
-                    <p>Our team includes Sandeep Jain, Vaibhav Bajpai, 
-                        Shikhar Goel, Dharmesh Singh, and Shubham 
-                        Baranwal, all passionate developers and engineers.
-                    </p>
+                    <p style={{color: "white"}}>Video of project will get embedded here</p>
                 </div>
             </div>
         </div>
