@@ -4,6 +4,7 @@ import Home from './pages/Home';
 import About from './pages/About';
 import Login from './pages/Login';
 
+
 function App() {
   let component
   switch (window.location.pathname) {
@@ -20,8 +21,8 @@ function App() {
 
   return( 
   <>
-  <Navbar  />
-  {component}
+    <Navbar  />
+    {component}
   </>
   )
 }
