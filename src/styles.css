@@ -2,6 +2,13 @@
     box-sizing: border-box;
 }
 
+h1{
+    margin: 0px;
+}
+
+p{
+    margin: 5px;
+}
 body {
     margin: 0;
 }
@@ -44,18 +51,31 @@ body {
 
 .home-container {
     background-color: #293241;
-    height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
+    height: 100vh;
+    text-align: left;
 }
 
 .flex-container {
     display: flex;
-    gap: 20px;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
 }
 
 .column {
     width: 50%;
-    /* Each column takes up 50% of the container width */
+    max-width: 600px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+}
+
+.outfit-font{
+    font-family: "Outfit", sans-serif;
+    font-optical-sizing: auto;
+    font-style: normal;
 }
