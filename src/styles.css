@@ -41,3 +41,21 @@ body {
     background-color: #98c1d9;
     color: #293241;
 }
+
+.home-container {
+    background-color: #293241;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.flex-container {
+    display: flex;
+    gap: 20px;
+}
+
+.column {
+    width: 50%;
+    /* Each column takes up 50% of the container width */
+}
