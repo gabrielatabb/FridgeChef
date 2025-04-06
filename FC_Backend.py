@@ -36,6 +36,12 @@ class Ingredient(Base):
     user_id = Column(Integer)
     name = Column(String)
 
+class GeneratedRecipe(Base):
+    __tablename__ = "generated_recipes"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer)
+    recipe_text = Column(String)
+
 # Create tables
 Base.metadata.create_all(bind=engine)
 
@@ -44,8 +50,12 @@ class IngredientInput(BaseModel):
     user_id: int
     ingredients: list[str]
 
-class RecipeRequest(BaseModel):
+class GenerateRecipeRequest(BaseModel):
     user_id: int
+
+class AcceptRecipeRequest(BaseModel):
+    user_id: int
+    accept: bool
 
 # Dependency
 def get_db():
@@ -77,24 +87,76 @@ def get_ingredients(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="No ingredients found")
     return {"ingredients": [ing.name for ing in ingredients]}
 
-# Generate recipe (Single OpenAI Request)
+# Generate recipe (stores in DB and waits for user to accept)
 @app.post("/generate_recipe/")
-def generate_recipe(request: RecipeRequest, db: Session = Depends(get_db)):
+def generate_recipe(request: GenerateRecipeRequest, db: Session = Depends(get_db)):
     ingredients = db.query(Ingredient).filter(Ingredient.user_id == request.user_id).all()
     if not ingredients:
         raise HTTPException(status_code=404, detail="No ingredients found")
 
     ingredient_list = ", ".join([ing.name for ing in ingredients])
-    prompt = f"Suggest a simple, tasty recipe using: {ingredient_list}"
+    prompt = f"Suggest a simple, tasty recipe using ONLY: {ingredient_list} Not every ingredient needs to be used, only use recipes that a sane person would eat"
 
     try:
         response = client.chat.completions.create(
             model="gpt-3.5-turbo-1106",
             messages=[{"role": "user", "content": prompt}]
         )
-        recipe = response.choices[0].message.content
-        return {"recipe": recipe}
+        recipe_text = response.choices[0].message.content
+
+        # Store the generated recipe in the database
+        new_recipe = GeneratedRecipe(user_id=request.user_id, recipe_text=recipe_text)
+        db.add(new_recipe)
+        db.commit()
+
+        return {
+            "message": "Recipe generated. Accept or request a new one.",
+            "recipe": recipe_text
+        }
+
     except Exception as e:
         logger.error(f"OpenAI error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"OpenAI API error: {str(e)}")
 
+# Accept or reject recipe
+@app.post("/accept_recipe/")
+def accept_recipe(request: AcceptRecipeRequest, db: Session = Depends(get_db)):
+    latest_recipe = db.query(GeneratedRecipe).filter(
+        GeneratedRecipe.user_id == request.user_id
+    ).order_by(GeneratedRecipe.id.desc()).first()
+
+    if not latest_recipe:
+        raise HTTPException(status_code=404, detail="No recipe found. Generate a recipe first.")
+
+    recipe_text = latest_recipe.recipe_text.lower()
+
+    if request.accept:
+        all_ingredients = db.query(Ingredient).filter(
+            Ingredient.user_id == request.user_id
+        ).all()
+
+        used = []
+        kept = []
+
+        for ing in all_ingredients:
+            if ing.name.lower() in recipe_text:
+                db.delete(ing)
+                used.append(ing.name)
+            else:
+                kept.append(ing.name)
+
+        db.commit()
+        db.delete(latest_recipe)
+        db.commit()
+
+        return {
+            "message": "Recipe accepted. Used ingredients removed.",
+            "recipe": latest_recipe.recipe_text,
+            "ingredients_removed": used,
+            "ingredients_kept": kept
+        }
+
+    else:
+        db.delete(latest_recipe)
+        db.commit()
+        return generate_recipe(GenerateRecipeRequest(user_id=request.user_id), db)
