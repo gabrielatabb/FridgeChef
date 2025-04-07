@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, Depends
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String, create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
@@ -7,14 +8,13 @@ import uvicorn
 import os
 import logging
 from dotenv import load_dotenv
+import secrets
 
 # Load environment variables
 load_dotenv()
 
-# Initialize FastAPI
 app = FastAPI()
 
-# Set up SQLite
 DATABASE_URL = "sqlite:///./fridgechef.db"
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(bind=engine, autoflush=False)
@@ -24,11 +24,15 @@ Base = declarative_base()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Security
+security = HTTPBasic()
+
 # Define Models
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True)
+    username = Column(String, unique=True, index=True)
+    password = Column(String)
 
 class Ingredient(Base):
     __tablename__ = "ingredients"
@@ -42,19 +46,17 @@ class GeneratedRecipe(Base):
     user_id = Column(Integer)
     recipe_text = Column(String)
 
-# Create tables
 Base.metadata.create_all(bind=engine)
 
-# Request Models
+# Pydantic models
+class RegisterInput(BaseModel):
+    username: str
+    password: str
+
 class IngredientInput(BaseModel):
-    user_id: int
     ingredients: list[str]
 
-class GenerateRecipeRequest(BaseModel):
-    user_id: int
-
 class AcceptRecipeRequest(BaseModel):
-    user_id: int
     accept: bool
 
 # Dependency
@@ -65,37 +67,62 @@ def get_db():
     finally:
         db.close()
 
-# OpenAI client (initialize with env var key)
+# Auth helper
+def get_current_user(credentials: HTTPBasicCredentials = Depends(security), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == credentials.username).first()
+    if user and secrets.compare_digest(user.password, credentials.password):
+        return user
+    raise HTTPException(status_code=401, detail="Invalid credentials")
+
+# OpenAI setup
 api_key = os.getenv("OPENAI_API_KEY")
 if not api_key:
-    raise RuntimeError("OPENAI_API_KEY is not set! Add it to your .env file or set it in your environment.")
+    raise RuntimeError("OPENAI_API_KEY not set!")
 client = OpenAI(api_key=api_key)
+
+# Register new user
+@app.post("/register")
+def register_user(data: RegisterInput, db: Session = Depends(get_db)):
+    if db.query(User).filter(User.username == data.username).first():
+        raise HTTPException(status_code=400, detail="Username already exists")
+    user = User(username=data.username, password=data.password)
+    db.add(user)
+    db.commit()
+    return {"message": "User registered"}
+
+# Login check
+@app.post("/login")
+def login(credentials: HTTPBasicCredentials = Depends(security), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == credentials.username).first()
+    if user and secrets.compare_digest(user.password, credentials.password):
+        return {"message": "Login successful"}
+    raise HTTPException(status_code=401, detail="Invalid credentials")
 
 # Store ingredients
 @app.post("/store_ingredients/")
-def store_ingredients(data: IngredientInput, db: Session = Depends(get_db)):
+def store_ingredients(data: IngredientInput, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     for item in data.ingredients:
-        db.add(Ingredient(user_id=data.user_id, name=item))
+        db.add(Ingredient(user_id=user.id, name=item))
     db.commit()
     return {"message": "Ingredients saved", "ingredients": data.ingredients}
 
 # Get ingredients
-@app.get("/get_ingredients/{user_id}")
-def get_ingredients(user_id: int, db: Session = Depends(get_db)):
-    ingredients = db.query(Ingredient).filter(Ingredient.user_id == user_id).all()
+@app.get("/get_ingredients/")
+def get_ingredients(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    ingredients = db.query(Ingredient).filter(Ingredient.user_id == user.id).all()
     if not ingredients:
         raise HTTPException(status_code=404, detail="No ingredients found")
     return {"ingredients": [ing.name for ing in ingredients]}
 
-# Generate recipe (stores in DB and waits for user to accept)
+# Generate recipe
 @app.post("/generate_recipe/")
-def generate_recipe(request: GenerateRecipeRequest, db: Session = Depends(get_db)):
-    ingredients = db.query(Ingredient).filter(Ingredient.user_id == request.user_id).all()
+def generate_recipe(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    ingredients = db.query(Ingredient).filter(Ingredient.user_id == user.id).all()
     if not ingredients:
         raise HTTPException(status_code=404, detail="No ingredients found")
 
     ingredient_list = ", ".join([ing.name for ing in ingredients])
-    prompt = f"Suggest a simple, tasty recipe using ONLY: {ingredient_list} Not every ingredient needs to be used, only use recipes that a sane person would eat"
+    prompt = f"Suggest a simple, tasty recipe using ONLY: {ingredient_list}. Not every ingredient needs to be used. Make it something a sane person would eat."
 
     try:
         response = client.chat.completions.create(
@@ -104,8 +131,7 @@ def generate_recipe(request: GenerateRecipeRequest, db: Session = Depends(get_db
         )
         recipe_text = response.choices[0].message.content
 
-        # Store the generated recipe in the database
-        new_recipe = GeneratedRecipe(user_id=request.user_id, recipe_text=recipe_text)
+        new_recipe = GeneratedRecipe(user_id=user.id, recipe_text=recipe_text)
         db.add(new_recipe)
         db.commit()
 
@@ -120,19 +146,19 @@ def generate_recipe(request: GenerateRecipeRequest, db: Session = Depends(get_db
 
 # Accept or reject recipe
 @app.post("/accept_recipe/")
-def accept_recipe(request: AcceptRecipeRequest, db: Session = Depends(get_db)):
+def accept_recipe(request: AcceptRecipeRequest, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     latest_recipe = db.query(GeneratedRecipe).filter(
-        GeneratedRecipe.user_id == request.user_id
+        GeneratedRecipe.user_id == user.id
     ).order_by(GeneratedRecipe.id.desc()).first()
 
     if not latest_recipe:
-        raise HTTPException(status_code=404, detail="No recipe found. Generate a recipe first.")
+        raise HTTPException(status_code=404, detail="No recipe found. Generate one first.")
 
     recipe_text = latest_recipe.recipe_text.lower()
 
     if request.accept:
         all_ingredients = db.query(Ingredient).filter(
-            Ingredient.user_id == request.user_id
+            Ingredient.user_id == user.id
         ).all()
 
         used = []
@@ -159,4 +185,4 @@ def accept_recipe(request: AcceptRecipeRequest, db: Session = Depends(get_db)):
     else:
         db.delete(latest_recipe)
         db.commit()
-        return generate_recipe(GenerateRecipeRequest(user_id=request.user_id), db)
+        return generate_recipe(user, db)
