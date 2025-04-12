@@ -7,7 +7,7 @@ const LoginSignup = () => {
     const [action,  setAction] = useState("Sign Up");
     const [email, setEmail] = useState('');
     const [pass, setPass] = useState('');
-    const [name, setName] = useState('');
+    const [username, setUsername] = useState('');
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
@@ -19,13 +19,16 @@ const LoginSignup = () => {
             const response = await fetch("http://localhost:8000/login", {
                 method: "POST",
                 headers: {
-                    Authorization: "Basic " + btoa(`${email}:${pass}`),
+                    Authorization: "Basic " + btoa(`${username}:${pass}`),
                 },
             });
             if (response.ok) {
                 alert("Login successful!");
+                localStorage.setItem("username", username);
+                localStorage.setItem("password", pass);
                 navigate('/product');
-              } else {
+              }
+               else {
                 const data = await response.json();
                 alert(data.detail || "Login failed.");
               }
@@ -35,20 +38,19 @@ const LoginSignup = () => {
         }
 
             console.log("Logging in with:");
-            console.log("Email:", email);
+            console.log("Username:", username);
             console.log("Password:", pass);
 
         } else {
         // SIGN UP
             try {
-                const response = await fetch("http://localhost:8000/signup", {
+                const response = await fetch("http://localhost:8000/register", {
                   method: "POST",
                   headers: {
                     "Content-Type": "application/json",
                   },
                   body: JSON.stringify({
-                    name: name,
-                    email: email,
+                    username: username,
                     password: pass,
                   }),
                 });
@@ -64,11 +66,9 @@ const LoginSignup = () => {
                 alert("Something went wrong during sign up.");
               }
             console.log("Signing up with:");
-            console.log("Name:", name);
+            console.log("Username:", username);
             console.log("Email:", email);
             console.log("Password:", pass);
-        
-            // You can replace this with actual signup logic
         }
     }
 
@@ -85,12 +85,12 @@ const LoginSignup = () => {
                 </div>
                 <div className="inter-font">
                 <div className="inputs">
-                    {action==="Login"?<div></div>:<div className="input">
-                        <input value={name} onChange={(e) => setName(e.target.value)} type="text" placeholder="Name"/>
-                    </div>}
                     <div className="input">
-                        <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Email Id"/>
+                        <input value={username} onChange={(e) => setUsername(e.target.value)} type="text" placeholder="Username"/>
                     </div>
+                    {action==="Login"?<div></div>:<div className="input">
+                        <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Email Id"/>
+                    </div>}
                     <div className="input">
                         <input value={pass} onChange={(e) => setPass(e.target.value)} type="password" placeholder="Password"/>
                     </div>

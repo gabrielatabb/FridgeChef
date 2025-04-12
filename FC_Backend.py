@@ -1,9 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends
-<<<<<<< HEAD
 from fastapi.middleware.cors import CORSMiddleware
-=======
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
->>>>>>> a08a5f3 (Added suport for user authentication and fixed generateRecipe further)
 from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String, create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
@@ -15,11 +12,14 @@ from dotenv import load_dotenv
 import secrets
 
 # Load environment variables
-load_dotenv()
+load_dotenv(dotenv_path="ATT02705.env")
 
 app = FastAPI()
 
-<<<<<<< HEAD
+api_key = os.getenv("OPENAI_API_KEY")
+if not api_key:
+    raise RuntimeError("OPENAI_API_KEY not set!")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
@@ -29,8 +29,6 @@ app.add_middleware(
 )
 
 # Set up SQLite
-=======
->>>>>>> a08a5f3 (Added suport for user authentication and fixed generateRecipe further)
 DATABASE_URL = "sqlite:///./fridgechef.db"
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(bind=engine, autoflush=False)
