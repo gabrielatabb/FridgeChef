@@ -3,6 +3,7 @@ import Navbar from './Navbar';
 import Home from './pages/Home';
 import About from './pages/About';
 import Login from './pages/LoginSignup/LoginSignup';
+import Product from './pages/Product';
 
 
 function App() {
@@ -17,6 +18,9 @@ function App() {
       break
     case "/about":
       component = <About />
+      break
+    case "/product":
+      component = <Product />
       break
   }
 
