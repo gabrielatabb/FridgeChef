@@ -122,7 +122,7 @@ def generate_recipe(user: User = Depends(get_current_user), db: Session = Depend
         raise HTTPException(status_code=404, detail="No ingredients found")
 
     ingredient_list = ", ".join([ing.name for ing in ingredients])
-    prompt = f"Suggest a simple, tasty recipe using ONLY: {ingredient_list}. Not every ingredient needs to be used. Make it something a sane person would eat."
+    prompt = f"Suggest a simple, tasty recipe using ONLY: {ingredient_list}. Not every ingredient needs to be used. Make it something a normal human would eat and give some general nutrition and health information about the meal"
 
     try:
         response = client.chat.completions.create(
