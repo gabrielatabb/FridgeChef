@@ -26,7 +26,7 @@ const LoginSignup = () => {
                 alert("Login successful!");
                 localStorage.setItem("username", username);
                 localStorage.setItem("password", pass);
-                navigate('/product');
+                navigate('/recipeChat');
               }
                else {
                 const data = await response.json();
@@ -83,6 +83,7 @@ const LoginSignup = () => {
                         <p style={{fontSize: "25px", marginTop: "30px"}}>{action}</p>
                     </div>
                 </div>
+                <form onSubmit={handleSubmit}>
                 <div className="inter-font">
                 <div className="inputs">
                     <div className="input">
@@ -106,8 +107,9 @@ const LoginSignup = () => {
                     </div>
                 </div> 
                 </div>
+                <button type="submit">Submit</button>
+                </form>
             </div>
-            <button onClick={handleSubmit} type="submit">Submit</button>
         </div>
     )
 }
