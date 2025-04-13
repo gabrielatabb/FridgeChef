@@ -1,5 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String, create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
@@ -11,9 +13,21 @@ from dotenv import load_dotenv
 import secrets
 
 # Load environment variables
-load_dotenv()
+load_dotenv(dotenv_path="ATT02705.env")
 
 app = FastAPI()
+
+api_key = os.getenv("OPENAI_API_KEY")
+if not api_key:
+    raise RuntimeError("OPENAI_API_KEY not set!")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 DATABASE_URL = "sqlite:///./fridgechef.db"
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
@@ -122,7 +136,7 @@ def generate_recipe(user: User = Depends(get_current_user), db: Session = Depend
         raise HTTPException(status_code=404, detail="No ingredients found")
 
     ingredient_list = ", ".join([ing.name for ing in ingredients])
-    prompt = f"Suggest a simple, tasty recipe using ONLY: {ingredient_list}. Not every ingredient needs to be used. Make it something a normal human would eat and give some general nutrition and health information about the meal"
+    prompt = f"Suggest a simple, tasty recipe using ONLY: {ingredient_list}. Not every ingredient needs to be used. Make it something a sane person would eat."
 
     try:
         response = client.chat.completions.create(
