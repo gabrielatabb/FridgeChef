@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, Depends
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel
@@ -28,7 +29,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Set up SQLite
 DATABASE_URL = "sqlite:///./fridgechef.db"
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(bind=engine, autoflush=False)
@@ -72,6 +72,10 @@ class IngredientInput(BaseModel):
 
 class AcceptRecipeRequest(BaseModel):
     accept: bool
+
+class RecipeRequest(BaseModel):
+    prompt: str
+
 
 # Dependency
 def get_db():
@@ -130,13 +134,22 @@ def get_ingredients(user: User = Depends(get_current_user), db: Session = Depend
 
 # Generate recipe
 @app.post("/generate_recipe/")
-def generate_recipe(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def generate_recipe(
+        request: RecipeRequest,
+        user: User = Depends(get_current_user),
+        db: Session = Depends(get_db)
+    ):
     ingredients = db.query(Ingredient).filter(Ingredient.user_id == user.id).all()
     if not ingredients:
         raise HTTPException(status_code=404, detail="No ingredients found")
 
     ingredient_list = ", ".join([ing.name for ing in ingredients])
-    prompt = f"Suggest a simple, tasty recipe using ONLY: {ingredient_list}. Not every ingredient needs to be used. Make it something a sane person would eat."
+    prompt = (
+        f"User request: {request.prompt}\n"
+        f"Available ingredients: {ingredient_list}\n"
+        "Respond with a recipe that fits the request, uses some of the available ingredients, "
+        "and includes health and nutritional information."
+    )
 
     try:
         response = client.chat.completions.create(
