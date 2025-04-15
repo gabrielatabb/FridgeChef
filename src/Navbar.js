@@ -4,10 +4,10 @@ export default function Navbar() {
             <a href="/" className="site-title">FridgeChef</a>
             <ul>
                 <li>
-                    <a href="/login">login</a>
+                    <a href="/Login">Login</a>
                 </li>    
                 <li>
-                    <a href="/about">about</a>
+                    <a href="/About">About</a>
                 </li>
             </ul>    
         </nav>
