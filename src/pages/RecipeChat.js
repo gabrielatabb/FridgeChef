@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import './RecipeChat.css';
+import '../styles.css'
 
 const RecipeChat = () => {
   const [messages, setMessages] = useState([
@@ -12,7 +14,6 @@ const RecipeChat = () => {
     const username = localStorage.getItem("username");
     const password = localStorage.getItem("password");
 
-    // Show user message
     setMessages(prev => [...prev, { sender: 'user', text: userInput }]);
     setUserInput('');
 
@@ -35,23 +36,48 @@ const RecipeChat = () => {
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '600px', margin: 'auto' }}>
-      <h2>FridgeChef Chat</h2>
-      <div style={{ border: '1px solid #ccc', padding: '10px', height: '300px', overflowY: 'auto' }}>
-        {messages.map((msg, index) => (
-          <div key={index} style={{ textAlign: msg.sender === 'user' ? 'right' : 'left', margin: '10px 0' }}>
-            <strong>{msg.sender === 'user' ? 'You' : 'FridgeChef'}:</strong> {msg.text}
-          </div>
-        ))}
+    <div className="chat-layout">
+    <div
+  className="sideBar">
+  <div
+    className="outfit-font"
+    style={{
+      marginLeft: "20px",
+      fontSize: "40px",
+      color: "#EC6D53",
+      textDecoration: "underline"
+    }}
+  >
+    Your Items
+  </div>
+  <a href="http://localhost:3000/product" style={{ fontSize: "40px", marginLeft: "10px" }}>
+    &gt;
+  </a>
+</div>
+
+
+      <div className="chatbox">
+        <div className="chat-messages">
+          {messages.map((msg, index) => (
+            <div
+              key={index}
+              className={`chat-message ${msg.sender}`}
+            >
+              <strong>{msg.sender === 'user' ? 'You' : 'FridgeChef'}:</strong> {msg.text}
+            </div>
+          ))}
+        </div>
+        <div className="chat-input-container">
+          <input
+            className="chat-input"
+            type="text"
+            value={userInput}
+            onChange={e => setUserInput(e.target.value)}
+            placeholder="Ask for a recipe..."
+          />
+          <button className="chat-button" onClick={handleSend}>Send</button>
+        </div>
       </div>
-      <input
-        type="text"
-        value={userInput}
-        onChange={e => setUserInput(e.target.value)}
-        placeholder="Ask for a recipe..."
-        style={{ width: '80%', padding: '10px' }}
-      />
-      <button onClick={handleSend} style={{ width: '18%', padding: '10px' }}>Send</button>
     </div>
   );
 };
