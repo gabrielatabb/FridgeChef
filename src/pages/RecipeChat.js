@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 const RecipeChat = () => {
   const [messages, setMessages] = useState([
-    { sender: 'bot', text: 'Hi! Ask me for a recipe with your saved ingredients.' }
+    { sender: 'bot', text: 'Hi! Please enter a prompt - You can either ask for a recipe, or give me specifications on what you would like me to create based on your ingredients and preferences.' }
   ]);
   const [userInput, setUserInput] = useState('');
 
@@ -23,7 +23,9 @@ const RecipeChat = () => {
           'Content-Type': 'application/json',
           'Authorization': 'Basic ' + btoa(username + ':' + password),
         },
+        body: JSON.stringify({ prompt: userInput }) // ✨ send the user message
       });
+      
 
       const data = await response.json();
       setMessages(prev => [...prev, { sender: 'bot', text: data.recipe || data.detail }]);
