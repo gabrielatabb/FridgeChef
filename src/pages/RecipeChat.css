@@ -1,7 +1,7 @@
 .sideBar {
   background-color: #E0EDF4;
   display: flex;
-  align-items: flex-start; /* Aligns items to the top */  
+  align-items: flex-start; 
 }
 
 .chat-message {
