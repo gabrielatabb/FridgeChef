@@ -1,7 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String, create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
@@ -76,8 +75,7 @@ class AcceptRecipeRequest(BaseModel):
 class RecipeRequest(BaseModel):
     prompt: str
 
-
-# Dependency
+#Dependency
 def get_db():
     db = SessionLocal()
     try:
@@ -85,20 +83,17 @@ def get_db():
     finally:
         db.close()
 
-# Auth helper
+#Auth helper
 def get_current_user(credentials: HTTPBasicCredentials = Depends(security), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == credentials.username).first()
     if user and secrets.compare_digest(user.password, credentials.password):
         return user
     raise HTTPException(status_code=401, detail="Invalid credentials")
 
-# OpenAI setup
-api_key = os.getenv("OPENAI_API_KEY")
-if not api_key:
-    raise RuntimeError("OPENAI_API_KEY not set!")
+#OpenAI setup
 client = OpenAI(api_key=api_key)
 
-# Register new user
+#Register new user
 @app.post("/register")
 def register_user(data: RegisterInput, db: Session = Depends(get_db)):
     if db.query(User).filter(User.username == data.username).first():
@@ -108,7 +103,7 @@ def register_user(data: RegisterInput, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "User registered"}
 
-# Login check
+#Login check
 @app.post("/login")
 def login(credentials: HTTPBasicCredentials = Depends(security), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == credentials.username).first()
@@ -116,7 +111,7 @@ def login(credentials: HTTPBasicCredentials = Depends(security), db: Session = D
         return {"message": "Login successful"}
     raise HTTPException(status_code=401, detail="Invalid credentials")
 
-# Store ingredients
+#Store ingredients
 @app.post("/store_ingredients/")
 def store_ingredients(data: IngredientInput, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     for item in data.ingredients:
@@ -124,7 +119,7 @@ def store_ingredients(data: IngredientInput, user: User = Depends(get_current_us
     db.commit()
     return {"message": "Ingredients saved", "ingredients": data.ingredients}
 
-# Get ingredients
+#Get ingredients
 @app.get("/get_ingredients/")
 def get_ingredients(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     ingredients = db.query(Ingredient).filter(Ingredient.user_id == user.id).all()
@@ -132,16 +127,22 @@ def get_ingredients(user: User = Depends(get_current_user), db: Session = Depend
         raise HTTPException(status_code=404, detail="No ingredients found")
     return {"ingredients": [ing.name for ing in ingredients]}
 
-# Generate recipe
+#Generate recipe
 @app.post("/generate_recipe/")
 def generate_recipe(
-        request: RecipeRequest,
-        user: User = Depends(get_current_user),
-        db: Session = Depends(get_db)
-    ):
-    ingredients = db.query(Ingredient).filter(Ingredient.user_id == user.id).all()
+    request: RecipeRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    ingredients = db.query(Ingredient).filter(
+        Ingredient.user_id == user.id,
+        Ingredient.name.isnot(None),
+        Ingredient.name != '',
+        Ingredient.name.ilike('%string%') == False
+    ).all()
+
     if not ingredients:
-        raise HTTPException(status_code=404, detail="No ingredients found")
+        raise HTTPException(status_code=404, detail="No valid ingredients found")
 
     ingredient_list = ", ".join([ing.name for ing in ingredients])
     prompt = (
@@ -171,7 +172,7 @@ def generate_recipe(
         logger.error(f"OpenAI error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"OpenAI API error: {str(e)}")
 
-# Accept or reject recipe
+#Accept or reject recipe
 @app.post("/accept_recipe/")
 def accept_recipe(request: AcceptRecipeRequest, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     latest_recipe = db.query(GeneratedRecipe).filter(
@@ -212,4 +213,20 @@ def accept_recipe(request: AcceptRecipeRequest, user: User = Depends(get_current
     else:
         db.delete(latest_recipe)
         db.commit()
-        return generate_recipe(user, db)
+        return generate_recipe(request, user, db)
+
+#Delete items
+@app.delete("/delete_ingredient/{ingredient_name}")
+def delete_ingredient(ingredient_name: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    ingredient = db.query(Ingredient).filter(
+        Ingredient.user_id == user.id,
+        Ingredient.name.ilike(ingredient_name)
+    ).first()
+
+    if not ingredient:
+        raise HTTPException(status_code=404, detail="Ingredient not found")
+
+    db.delete(ingredient)
+    db.commit()
+
+    return {"message": f"Ingredient '{ingredient_name}' deleted."}
