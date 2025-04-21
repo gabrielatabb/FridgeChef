@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import './Product.css';
+
 
 const Product = () => {
   const [ingredient, setIngredient] = useState('');
@@ -65,30 +67,56 @@ const Product = () => {
     }
   };
   
+  const handleDeleteIngredient = async (ingredientName) => {
+    const username = localStorage.getItem("username");
+    const password = localStorage.getItem("password");
+  
+    const response = await fetch(`http://localhost:8000/delete_ingredient/${ingredientName}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': 'Basic ' + btoa(username + ':' + password),
+      },
+    });
+  
+    if (response.ok) {
+      alert(`Deleted ${ingredientName}`);
+      setSavedIngredients(savedIngredients.filter(i => i !== ingredientName));
+    } else {
+      alert("Failed to delete ingredient.");
+    }
+  };
+  
 
   return (
-    <div>
+    <div className="product-container">
       <h2>Add Ingredient</h2>
-      <input type="text" value={ingredient} onChange={handleInputChange} placeholder="Enter ingredient"/>
-      <button onClick={handleAddIngredient}>Add Ingredient</button>
-
+  
+      <div className="input-section">
+        <input type="text" value={ingredient} onChange={handleInputChange} placeholder="Enter ingredient" />
+        <button onClick={handleAddIngredient}>Add</button>
+      </div>
+  
       <h3>Ingredients List</h3>
       <ul>
         {ingredients.map((ing, index) => (
           <li key={index}>{ing}</li>
         ))}
       </ul>
-
+  
       <button onClick={handleStoreIngredients}>Save Ingredients</button>
+  
       <h3>Saved Ingredients</h3>
-<ul>
-  {savedIngredients.map((ing, index) => (
-    <li key={index}>{ing}</li>
-  ))}
-</ul>
-
+      <ul>
+        {savedIngredients.map((ing, index) => (
+          <li key={index}>
+            {ing}
+            <button onClick={() => handleDeleteIngredient(ing)}>❌</button>
+          </li>
+        ))}
+      </ul>
     </div>
   );
+  
 };
 
 export default Product;

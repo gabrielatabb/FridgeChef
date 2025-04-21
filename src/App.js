@@ -6,6 +6,7 @@ import About from './pages/About';
 import Login from './pages/LoginSignup/LoginSignup';
 import Product from './pages/Product';
 import RecipeChat from './pages/RecipeChat';
+import SavedRecipePage from './pages/SavedRecipePage';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/about" element={<About />} />
+        <Route path="/saved-recipe" element={<SavedRecipePage />} />
         <Route path="/product" element={<Product />} />
         <Route path="/recipeChat" element={<RecipeChat />} />
       </Routes>

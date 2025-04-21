@@ -14,17 +14,21 @@ body {
 }
 
 .nav { 
-    background-color: #293241;
-    color: white;
+    background-color: #3d5a80;
     display: flex;
     justify-content: space-between;
-    align-items: stretch;
-    gap: 2rem;
-    padding: 0 1rem;
+    align-items: center;
+    padding: 15px 40px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    font-family: 'Outfit', sans-serif;
+    border-bottom: 4px solid #ec6d53;
 }
 
 .site-title {
-    font-size: 2rem;
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #fff;
+    text-decoration: none;
 }
 
 .nav ul {
@@ -32,18 +36,24 @@ body {
     margin: 0;
     list-style: none;
     display: flex;
-    gap: 1rem;
+    gap: 1.2rem;
 }
 
 .nav a {
-    color: inherit;
+    color: #1a1818;
     text-decoration: none;
     height: 100%;
     display: flex;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    font-weight: 500;
     align-items: center;
     padding: .25rem;
 }
 
+.nav a:hover {
+    background-color: #98c1d9;
+    color: #293241;
+  }
 .nav li:hover{
     background-color: #98c1d9;
     color: #293241;
