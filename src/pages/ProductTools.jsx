@@ -75,7 +75,6 @@ const ProductTools = () => {
     });
   
     if (response.ok) {
-      alert('Tools stored successfully!');
       setTools([]);
   
       const fetchResponse = await fetch('http://localhost:8000/get_non_consumables/', {

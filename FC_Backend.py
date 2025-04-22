@@ -204,7 +204,7 @@ def accept_recipe(request: AcceptRecipeRequest, user: User = Depends(get_current
         db.commit()
 
         return {
-            "message": "Recipe accepted. Ingredients removed and recipe saved.",
+            "message": "Recipe accepted. Ingredients removed and recipe saved. Enter another promt!",
             "recipe": latest_recipe.recipe_text,
             "ingredients_removed": used,
             "ingredients_kept": kept
