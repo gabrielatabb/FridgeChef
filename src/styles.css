@@ -40,7 +40,7 @@ body {
 }
 
 .nav a {
-    color: #1a1818;
+    color: #ffffff;
     text-decoration: none;
     height: 100%;
     display: flex;
@@ -48,6 +48,12 @@ body {
     font-weight: 500;
     align-items: center;
     padding: .25rem;
+}
+
+.nav li{
+    background-color: #3d5a80;
+    border-color: #3d5a80;
+    font-size: 20px;
 }
 
 .nav a:hover {
