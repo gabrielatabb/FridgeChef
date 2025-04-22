@@ -109,7 +109,6 @@ const Product = () => {
     });
   
     if (response.ok) {
-      alert(`Deleted ${ingredientName}`);
       setSavedIngredients(savedIngredients.filter(i => i !== ingredientName));
     } else {
       alert("Failed to delete ingredient.");

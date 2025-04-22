@@ -34,7 +34,22 @@ export default function Home() {
                 </div>
 
                 <div className="column">
-                    <p style={{color: "white"}}>Video of project will get embedded here</p>
+                <video
+                        src="/FridgeChef-Demo.mov"
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        style={{
+                            width: "150%",
+                            maxWidth: "12000px",
+                            height: "auto",
+                            borderRadius: "20px",
+                            boxShadow: "0 0 20px rgba(0, 0, 0, 0.3)"
+                        }}
+                    >
+                        Your browser does not support the video tag.
+                    </video>
                 </div>
             </div>
         </div>

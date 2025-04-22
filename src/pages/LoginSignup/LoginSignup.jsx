@@ -48,7 +48,6 @@ const LoginSignup = () => {
                     }),
                 });
                 if (response.ok) {
-                    alert("Sign up successful!");
                     setErrorMessage('')
                     setAction("Login");
                 } else {

@@ -108,7 +108,6 @@ const ProductTools = () => {
     });
 
     if (response.ok) {
-      alert(`Deleted ${toolName}`);
       setSavedTools(savedTools.filter(t => t !== toolName));
     } else {
       alert("Failed to delete tool.");
