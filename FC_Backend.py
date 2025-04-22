@@ -142,7 +142,6 @@ def generate_recipe(
         f"Available ingredients: {ingredient_list}\n"
         "Respond with a recipe that fits the request, uses some of the available ingredients (not all required), "
         "and includes health and nutritional information.\n"
-        "At the end, say: 'Would you like to accept this recipe and remove used ingredients from your list? (yes / no)'"
     )
 
     try:
