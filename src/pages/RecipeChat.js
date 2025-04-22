@@ -53,34 +53,39 @@ const RecipeChat = () => {
       console.error("Failed to fetch saved recipes", error);
     }
   };
+  
 
-  const sendRecipeRequest = async (promptText) => {
-    console.log("sendRecipeRequest");
-    console.log(ingredients);
-    try {
-      const response = await fetch('http://localhost:8000/generate_recipe/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Basic ' + btoa(username + ':' + password),
-        },
-        body: JSON.stringify({ prompt: promptText })
-      });
-
-      const data = await response.json();
-      console.log(data.recipe);
-      console.log(data.detail);
-      setMessages(prev => [
-        ...prev,
-        { sender: 'bot', text: data.recipe || data.detail },
-        { sender: 'bot', text: 'Would you like to accept this recipe and remove used ingredients from your list? (yes / no)' }
-      ]);
-      setLatestRecipeGenerated(true);
-    } catch (err) {
-      console.error(err);
-      setMessages(prev => [...prev, { sender: 'bot', text: 'Sorry, something went wrong.' }]);
-    }
-  };
+    const sendRecipeRequest = async (promptText) => {
+      try {
+        const response = await fetch('http://localhost:8000/generate_recipe/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Basic ' + btoa(username + ':' + password),
+          },
+          body: JSON.stringify({ prompt: promptText })
+        });
+    
+        const data = await response.json();
+    
+        if (data.detail === "No valid ingredients found, please add ingredients to the list and then enter a new prompt!") {
+          setMessages(prev => [...prev, { sender: 'bot', text: data.detail }]);
+          setLatestRecipeGenerated(false); 
+          return; 
+        }
+    
+        setMessages(prev => [
+          ...prev,
+          { sender: 'bot', text: data.recipe },
+          { sender: 'bot', text: 'Would you like to accept this recipe and remove used ingredients from your list? (yes / no)' }
+        ]);
+        setLatestRecipeGenerated(true);
+      } catch (err) {
+        console.error(err);
+        setMessages(prev => [...prev, { sender: 'bot', text: 'Sorry, something went wrong.' }]);
+      }
+    };
+    
 
   const handleUserReply = async (text) => {
     const lowerText = text.toLowerCase();
@@ -98,17 +103,18 @@ const RecipeChat = () => {
             },
             body: JSON.stringify({ accept: true })
           });
-
+      
           const data = await response.json();
           setMessages(prev => [...prev, { sender: 'bot', text: data.message }]);
           setLatestRecipeGenerated(false);
-          fetchIngredients();
-          fetchSavedRecipes();
+      
+          await fetchIngredients();       
+          await fetchSavedRecipes();    
         } catch (err) {
           console.error(err);
           setMessages(prev => [...prev, { sender: 'bot', text: 'Failed to process your response.' }]);
         }
-      } else if (lowerText === 'no') {
+      }else if (lowerText === 'no') {
         setMessages(prev => [...prev, { sender: 'bot', text: "Okay! Recipe will not be saved and ingredients will not be removed. Please enter another prompt!" }]);
         setLatestRecipeGenerated(false);
         

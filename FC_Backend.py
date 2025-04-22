@@ -134,13 +134,13 @@ def generate_recipe(
     ).all()
 
     if not ingredients:
-        raise HTTPException(status_code=404, detail="No valid ingredients found")
+        raise HTTPException(status_code=404, detail="No valid ingredients found, please add ingredients to the list and then enter a new prompt!")
 
     ingredient_list = ", ".join([ing.name for ing in ingredients])
     prompt = (
         f"User request: {request.prompt}\n"
         f"Available ingredients: {ingredient_list}\n"
-        "Respond with a recipe that fits the request, uses some of the available ingredients (not all required), "
+        "Respond with a recipe that fits the request, uses some of the available ingredients (not all required), BUT only use the ingredients available to you in the list. "
         "and includes health and nutritional information.\n"
     )
 
@@ -177,8 +177,7 @@ def accept_recipe(request: AcceptRecipeRequest, user: User = Depends(get_current
 
     if request.accept:
         all_ingredients = db.query(Ingredient).filter(Ingredient.user_id == user.id).all()
-        used = []
-        kept = []
+        used, kept = [], []
 
         for ing in all_ingredients:
             if ing.name.lower() in recipe_text:
@@ -187,8 +186,9 @@ def accept_recipe(request: AcceptRecipeRequest, user: User = Depends(get_current
             else:
                 kept.append(ing.name)
 
-        saved_recipe = SavedRecipe(user_id=user.id, recipe_text=latest_recipe.recipe_text)
-        db.add(saved_recipe)
+        saved = SavedRecipe(user_id=user.id, recipe_text=latest_recipe.recipe_text)
+        db.add(saved)
+
         db.delete(latest_recipe)
         db.commit()
 
@@ -198,15 +198,17 @@ def accept_recipe(request: AcceptRecipeRequest, user: User = Depends(get_current
             "ingredients_removed": used,
             "ingredients_kept": kept
         }
-
     db.delete(latest_recipe)
     db.commit()
-    return {"message": "Recipe rejected. You can generate a new one."}
+    return {"message": "Okay! Recipe will not be saved and ingredients will not be removed. Please enter another prompt!"}
+
 
 @app.get("/get_saved_recipes/")
 def get_saved_recipes(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    recipes = db.query(SavedRecipe).filter(GeneratedRecipe.user_id == user.id).all()
+    recipes = db.query(SavedRecipe).filter(SavedRecipe.user_id == user.id).all()
     return {"recipes": [r.recipe_text for r in recipes]}
+
+
 
 
 @app.delete("/delete_ingredient/{ingredient_name}")
