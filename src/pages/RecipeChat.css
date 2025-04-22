@@ -172,14 +172,6 @@ h2 {
   transition: background-color 0.2s ease-in-out;
 }
 
-<<<<<<< HEAD
-.manage-ingredients a:hover{
-  color: #d7593f;
-}
-
- 
-=======
 .manage-link a:hover {
   background-color: #ff5622c9;
 }
->>>>>>> 26f99541a42159e4e96fe7e0df34e36abfdd1947

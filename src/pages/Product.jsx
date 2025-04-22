@@ -77,12 +77,7 @@ const Product = () => {
     });
   
     if (response.ok) {
-<<<<<<< HEAD
       setIngredients([]); // Clear local input list
-=======
-      alert('Ingredients stored successfully!');
-      setIngredients([]);
->>>>>>> 26f99541a42159e4e96fe7e0df34e36abfdd1947
     
       const fetchResponse = await fetch('http://localhost:8000/get_ingredients/', {
         method: 'GET',
