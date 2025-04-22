@@ -206,7 +206,7 @@ def accept_recipe(request: AcceptRecipeRequest, user: User = Depends(get_current
 
 @app.get("/get_saved_recipes/")
 def get_saved_recipes(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    recipes = db.query(GeneratedRecipe).filter(GeneratedRecipe.user_id == user.id).all()
+    recipes = db.query(SavedRecipe).filter(GeneratedRecipe.user_id == user.id).all()
     return {"recipes": [r.recipe_text for r in recipes]}
 
 

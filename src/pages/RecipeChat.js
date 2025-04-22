@@ -16,6 +16,7 @@ const RecipeChat = () => {
   const [savedRecipes, setSavedRecipes] = useState([]);
   const [hoveredRecipe, setHoveredRecipe] = useState(null);
 
+
   const username = localStorage.getItem("username");
   const password = localStorage.getItem("password");
   const navigate = useNavigate();
@@ -54,6 +55,8 @@ const RecipeChat = () => {
   };
 
   const sendRecipeRequest = async (promptText) => {
+    console.log("sendRecipeRequest");
+    console.log(ingredients);
     try {
       const response = await fetch('http://localhost:8000/generate_recipe/', {
         method: 'POST',
@@ -65,6 +68,8 @@ const RecipeChat = () => {
       });
 
       const data = await response.json();
+      console.log(data.recipe);
+      console.log(data.detail);
       setMessages(prev => [
         ...prev,
         { sender: 'bot', text: data.recipe || data.detail },
@@ -103,10 +108,10 @@ const RecipeChat = () => {
           console.error(err);
           setMessages(prev => [...prev, { sender: 'bot', text: 'Failed to process your response.' }]);
         }
-      } else {
-        setMessages(prev => [...prev, { sender: 'bot', text: "Okay! Here's another idea using your ingredients..." }]);
+      } else if (lowerText === 'no') {
+        setMessages(prev => [...prev, { sender: 'bot', text: "Okay! Recipe will not be saved and ingredients will not be removed. Please enter another prompt!" }]);
         setLatestRecipeGenerated(false);
-        await sendRecipeRequest(userInput);
+        
       }
     } else {
       await sendRecipeRequest(text);
