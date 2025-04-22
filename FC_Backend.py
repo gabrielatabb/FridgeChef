@@ -59,14 +59,14 @@ class SavedRecipe(Base):
     user_id = Column(Integer)
     recipe_text = Column(String)
 
-Base.metadata.create_all(bind=engine)
-
 class NonConsumable(Base): #New class for pots, spices, ETC
     __tablename__ = "non_consumables"
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer)
     name = Column(String)
 
+class NonConsumableInput(BaseModel):
+    non_consumables: list[str]
 
 class RegisterInput(BaseModel):
     username: str
@@ -80,6 +80,9 @@ class AcceptRecipeRequest(BaseModel):
 
 class RecipeRequest(BaseModel):
     prompt: str
+
+Base.metadata.create_all(bind=engine)
+
 
 def get_db():
     db = SessionLocal()
@@ -142,11 +145,14 @@ def generate_recipe(
         raise HTTPException(status_code=404, detail="No valid ingredients found, please add ingredients to the list and then enter a new prompt!")
 
     ingredient_list = ", ".join([ing.name for ing in ingredients])
+    tools = db.query(NonConsumable).filter(NonConsumable.user_id == user.id).all()
+    tool_list = ", ".join([tool.name for tool in tools])
     prompt = (
         f"User request: {request.prompt}\n"
         f"Available ingredients: {ingredient_list}\n"
-        "Respond with a recipe that fits the request, uses some of the available ingredients (not all required), BUT only use the ingredients available to you in the list. "
-        "and includes health and nutritional information.\n"
+        f"Available tools and spices: {tool_list}\n"
+        "Respond with a recipe that fits the request, uses some of the available ingredients (not all required), BUT only use the ingredients, tools, and spices available to you in the list. The recipe can be "
+        "as simple or as complex as you need it to be and includes health and nutritional information.\n"
     )
 
     try:
@@ -214,8 +220,6 @@ def get_saved_recipes(user: User = Depends(get_current_user), db: Session = Depe
     return {"recipes": [r.recipe_text for r in recipes]}
 
 
-
-
 @app.delete("/delete_ingredient/{ingredient_name}")
 def delete_ingredient(ingredient_name: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     ingredient = db.query(Ingredient).filter(
@@ -231,9 +235,32 @@ def delete_ingredient(ingredient_name: str, user: User = Depends(get_current_use
 
     return {"message": f"Ingredient '{ingredient_name}' deleted."}
 
+
+
 @app.post("/store_non_consumables/")
-def store_non_consumables(data: IngredientInput, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    for item in data.ingredients:
+def store_non_consumables(data: NonConsumableInput, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    for item in data.non_consumables:
         db.add(NonConsumable(user_id=user.id, name=item))
     db.commit()
-    return {"message": "Non-consumables saved", "items": data.ingredients}
+    return {"message": "Non-consumables saved", "items": data.non_consumables}
+
+
+@app.get("/get_non_consumables/")
+def get_non_consumables(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    items = db.query(NonConsumable).filter(NonConsumable.user_id == user.id).all()
+    return {"non_consumables": [i.name for i in items]}
+
+@app.delete("/delete_non_consumable/{item_name}")
+def delete_non_consumable(item_name: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    item = db.query(NonConsumable).filter(
+        NonConsumable.user_id == user.id,
+        NonConsumable.name.ilike(item_name)
+    ).first()
+
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    db.delete(item)
+    db.commit()
+    return {"message": f"Non-consumable '{item_name}' deleted."}
+

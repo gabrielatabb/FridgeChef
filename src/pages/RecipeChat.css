@@ -160,15 +160,26 @@ h2 {
   display: block;
 }
 
-.manage-ingredients a{
-  font-size: 20px;
-  font-family: "Inter", sans-serif;
+.manage-link a {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 8px 12px;
+  background-color: #ff6f43c7;
+  color: white;
+  border-radius: 12px;
   text-decoration: none;
-  color: #293241;
+  font-weight: 500;
+  transition: background-color 0.2s ease-in-out;
 }
 
+<<<<<<< HEAD
 .manage-ingredients a:hover{
   color: #d7593f;
 }
 
  
+=======
+.manage-link a:hover {
+  background-color: #ff5622c9;
+}
+>>>>>>> 26f99541a42159e4e96fe7e0df34e36abfdd1947

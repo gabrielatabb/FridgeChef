@@ -77,9 +77,13 @@ const Product = () => {
     });
   
     if (response.ok) {
+<<<<<<< HEAD
       setIngredients([]); // Clear local input list
+=======
+      alert('Ingredients stored successfully!');
+      setIngredients([]);
+>>>>>>> 26f99541a42159e4e96fe7e0df34e36abfdd1947
     
-      // Fetch saved ingredients from the server
       const fetchResponse = await fetch('http://localhost:8000/get_ingredients/', {
         method: 'GET',
         headers: {
@@ -89,7 +93,7 @@ const Product = () => {
     
       if (fetchResponse.ok) {
         const data = await fetchResponse.json();
-        setSavedIngredients(data.ingredients); // Update UI with saved data
+        setSavedIngredients(data.ingredients); 
       } else {
         alert('Failed to fetch saved ingredients.');
       }
