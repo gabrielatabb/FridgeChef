@@ -28,11 +28,11 @@ const LoginSignup = () => {
                     navigate('/recipeChat');
                 } else {
                     const data = await response.json();
-                    setErrorMessage(data.detail || "Login failed.");
+                    setErrorMessage(data.detail || "Invalid username or password.");
                 }
             } catch (err) {
                 console.error(err);
-                setErrorMessage("Something went wrong during login.");
+                setErrorMessage("Invalid username or password.");
             }
         } else {
             try {
@@ -54,7 +54,7 @@ const LoginSignup = () => {
                     setErrorMessage(data.detail || "Sign up failed.");
                 }
             } catch (err) {
-                setErrorMessage("Something went wrong during sign up.");
+                setErrorMessage("Sign up failed.");
             }
         }
     };
