@@ -126,4 +126,11 @@ body {
 .saved-recipe-page{
     background-color: #f4ded3;
     height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.recipe-page{
+
 }
