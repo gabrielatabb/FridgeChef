@@ -11,11 +11,13 @@ const SavedRecipePage = () => {
   }
 
   return (
+    <div className="saved-recipe-page">
     <div className="recipe-page" style={{ padding: '40px', maxWidth: '800px', margin: 'auto', background: '#f9f9f9', borderRadius: '10px' }}>
       <h1 style={{ color: '#EC6D53', marginBottom: '20px' }}>Saved Recipe</h1>
       <div style={{ whiteSpace: 'pre-wrap', fontSize: '16px', lineHeight: '1.6' }}>
         {recipe}
       </div>
+    </div>
     </div>
   );
 };
