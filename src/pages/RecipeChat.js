@@ -162,7 +162,7 @@ const RecipeChat = () => {
       </div>
 
       <div className="ingredients-panel">
-        <h3>Current Ingredients</h3>
+        <h2>Current Ingredients</h2>
         <div>
           {ingredients.length > 0 ? (
             ingredients
@@ -174,9 +174,11 @@ const RecipeChat = () => {
             <p style={{ color: '#777' }}>No ingredients found.</p>
           )}
         </div>
-        <a href="http://localhost:3000/product" style={{ display: 'block', marginTop: '15px', fontSize: '16px' }}>
-          &gt; Manage Ingredients
+        <div className='manage-ingredients'>
+        <a href="/product" style={{ display: 'block', marginTop: '15px'}}>
+            &gt; Manage Ingredients
         </a>
+        </div>
       </div>
 
       <div className="chatbox">
