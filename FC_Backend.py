@@ -11,8 +11,6 @@ import logging
 from dotenv import load_dotenv
 import secrets
 
-load_dotenv(dotenv_path="ATT02705.env")
-
 app = FastAPI()
 
 api_key = os.getenv("OPENAI_API_KEY")
@@ -62,6 +60,13 @@ class SavedRecipe(Base):
     recipe_text = Column(String)
 
 Base.metadata.create_all(bind=engine)
+
+class NonConsumable(Base): #New class for pots, spices, ETC
+    __tablename__ = "non_consumables"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer)
+    name = Column(String)
+
 
 class RegisterInput(BaseModel):
     username: str
@@ -225,3 +230,10 @@ def delete_ingredient(ingredient_name: str, user: User = Depends(get_current_use
     db.commit()
 
     return {"message": f"Ingredient '{ingredient_name}' deleted."}
+
+@app.post("/store_non_consumables/")
+def store_non_consumables(data: IngredientInput, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    for item in data.ingredients:
+        db.add(NonConsumable(user_id=user.id, name=item))
+    db.commit()
+    return {"message": "Non-consumables saved", "items": data.ingredients}
