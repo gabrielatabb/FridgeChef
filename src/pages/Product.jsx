@@ -77,7 +77,6 @@ const Product = () => {
     });
   
     if (response.ok) {
-      alert('Ingredients stored successfully!');
       setIngredients([]); // Clear local input list
     
       // Fetch saved ingredients from the server

@@ -164,7 +164,10 @@ const RecipeChat = () => {
         {hoveredRecipe && (
           <div className="preview-box">
             <div className="preview-content">
-              {hoveredRecipe.split('\n').map((line, i) => (
+              {hoveredRecipe
+              .split('\n')
+              .slice(0, 10)
+              .map((line, i) => (
                 <div key={i}>{line}</div>
               ))}
             </div>

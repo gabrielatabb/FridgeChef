@@ -20,7 +20,6 @@ const LoginSignup = () => {
                     },
                 });
                 if (response.ok) {
-                    alert("Login successful!");
                     localStorage.setItem("username", username);
                     localStorage.setItem("password", pass);
                     navigate('/recipeChat');
