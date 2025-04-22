@@ -72,3 +72,11 @@
     color: #3E5B7F;
     border: 1px solid #3E5B7F;
 }
+
+.error-message{
+    margin-top: 20px;
+    text-align: center;
+    color: rgb(227, 7, 7);
+    font-weight:520;
+    font-size: 17px;
+}

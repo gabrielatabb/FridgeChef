@@ -8,9 +8,12 @@ const LoginSignup = () => {
     const [email, setEmail] = useState('');
     const [pass, setPass] = useState('');
     const [username, setUsername] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
     const navigate = useNavigate();
 
     const handleSubmit = async () => {
+        setErrorMessage('');
+
         if (action === "Login") {
             try {
                 const response = await fetch("http://localhost:8000/login", {
@@ -25,11 +28,11 @@ const LoginSignup = () => {
                     navigate('/recipeChat');
                 } else {
                     const data = await response.json();
-                    alert(data.detail || "Login failed.");
+                    setErrorMessage(data.detail || "Login failed.");
                 }
             } catch (err) {
                 console.error(err);
-                alert("Something went wrong during login.");
+                setErrorMessage("Something went wrong during login.");
             }
         } else {
             try {
@@ -45,14 +48,13 @@ const LoginSignup = () => {
                 });
                 if (response.ok) {
                     alert("Sign up successful!");
-                    setAction("Login"); // switch to login form
+                    setAction("Login");
                 } else {
                     const data = await response.json();
-                    alert(data.detail || "Sign up failed.");
+                    setErrorMessage(data.detail || "Sign up failed.");
                 }
             } catch (err) {
-                console.error(err);
-                alert("Something went wrong during sign up.");
+                setErrorMessage("Something went wrong during sign up.");
             }
         }
     };
@@ -87,6 +89,8 @@ const LoginSignup = () => {
                         {action === "Sign Up" ? null : (
                             <div className="forgot-password">Lost Password? <span>Click Here!</span></div>
                         )}
+
+                        {errorMessage && <div className="error-message">{errorMessage}</div>}
 
                         <div className="submit-container">
                             <div
