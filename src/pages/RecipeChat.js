@@ -13,9 +13,9 @@ const RecipeChat = () => {
   const [userInput, setUserInput] = useState('');
   const [latestRecipeGenerated, setLatestRecipeGenerated] = useState(false);
   const [ingredients, setIngredients] = useState([]);
+  const [nonConsumables, setNonConsumables] = useState([]);
   const [savedRecipes, setSavedRecipes] = useState([]);
   const [hoveredRecipe, setHoveredRecipe] = useState(null);
-
 
   const username = localStorage.getItem("username");
   const password = localStorage.getItem("password");
@@ -23,6 +23,7 @@ const RecipeChat = () => {
 
   useEffect(() => {
     fetchIngredients();
+    fetchNonConsumables();
     fetchSavedRecipes();
   }, []);
 
@@ -40,6 +41,20 @@ const RecipeChat = () => {
     }
   };
 
+  const fetchNonConsumables = async () => {
+    try {
+      const response = await fetch('http://localhost:8000/get_non_consumables/', {
+        headers: {
+          'Authorization': 'Basic ' + btoa(username + ':' + password)
+        }
+      });
+      const data = await response.json();
+      setNonConsumables(data.non_consumables || []);
+    } catch (error) {
+      console.error("Failed to fetch non-consumables", error);
+    }
+  };
+
   const fetchSavedRecipes = async () => {
     try {
       const response = await fetch('http://localhost:8000/get_saved_recipes/', {
@@ -53,39 +68,37 @@ const RecipeChat = () => {
       console.error("Failed to fetch saved recipes", error);
     }
   };
-  
 
-    const sendRecipeRequest = async (promptText) => {
-      try {
-        const response = await fetch('http://localhost:8000/generate_recipe/', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Basic ' + btoa(username + ':' + password),
-          },
-          body: JSON.stringify({ prompt: promptText })
-        });
-    
-        const data = await response.json();
-    
-        if (data.detail === "No valid ingredients found, please add ingredients to the list and then enter a new prompt!") {
-          setMessages(prev => [...prev, { sender: 'bot', text: data.detail }]);
-          setLatestRecipeGenerated(false); 
-          return; 
-        }
-    
-        setMessages(prev => [
-          ...prev,
-          { sender: 'bot', text: data.recipe },
-          { sender: 'bot', text: 'Would you like to accept this recipe and remove used ingredients from your list? (yes / no)' }
-        ]);
-        setLatestRecipeGenerated(true);
-      } catch (err) {
-        console.error(err);
-        setMessages(prev => [...prev, { sender: 'bot', text: 'Sorry, something went wrong.' }]);
+  const sendRecipeRequest = async (promptText) => {
+    try {
+      const response = await fetch('http://localhost:8000/generate_recipe/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Basic ' + btoa(username + ':' + password),
+        },
+        body: JSON.stringify({ prompt: promptText })
+      });
+
+      const data = await response.json();
+
+      if (data.detail === "No valid ingredients found, please add ingredients to the list and then enter a new prompt!") {
+        setMessages(prev => [...prev, { sender: 'bot', text: data.detail }]);
+        setLatestRecipeGenerated(false); 
+        return; 
       }
-    };
-    
+
+      setMessages(prev => [
+        ...prev,
+        { sender: 'bot', text: data.recipe },
+        { sender: 'bot', text: 'Would you like to accept this recipe and remove used ingredients from your list? (yes / no)' }
+      ]);
+      setLatestRecipeGenerated(true);
+    } catch (err) {
+      console.error(err);
+      setMessages(prev => [...prev, { sender: 'bot', text: 'Sorry, something went wrong.' }]);
+    }
+  };
 
   const handleUserReply = async (text) => {
     const lowerText = text.toLowerCase();
@@ -103,21 +116,20 @@ const RecipeChat = () => {
             },
             body: JSON.stringify({ accept: true })
           });
-      
+
           const data = await response.json();
           setMessages(prev => [...prev, { sender: 'bot', text: data.message }]);
           setLatestRecipeGenerated(false);
-      
+
           await fetchIngredients();       
           await fetchSavedRecipes();    
         } catch (err) {
           console.error(err);
           setMessages(prev => [...prev, { sender: 'bot', text: 'Failed to process your response.' }]);
         }
-      }else if (lowerText === 'no') {
+      } else if (lowerText === 'no') {
         setMessages(prev => [...prev, { sender: 'bot', text: "Okay! Recipe will not be saved and ingredients will not be removed. Please enter another prompt!" }]);
         setLatestRecipeGenerated(false);
-        
       }
     } else {
       await sendRecipeRequest(text);
@@ -171,7 +183,7 @@ const RecipeChat = () => {
           </div>
         )}
       </div>
-
+  
       <div className="ingredients-panel">
         <h2>Current Ingredients</h2>
         <div>
@@ -185,13 +197,25 @@ const RecipeChat = () => {
             <p style={{ color: '#777' }}>No ingredients found.</p>
           )}
         </div>
-        <div className='manage-ingredients'>
-        <a href="/product" style={{ display: 'block', marginTop: '15px'}}>
-            &gt; Manage Ingredients
-        </a>
+        <div className="manage-link">
+          <a href="/product">&gt; Manage Ingredients</a>
+        </div>
+  
+        <h2 style={{ marginTop: '30px' }}>Non-Consumables</h2>
+        <div>
+          {nonConsumables.length > 0 ? (
+            nonConsumables.map((item, i) => (
+              <div key={i} className="ingredient-tag">{item}</div>
+            ))
+          ) : (
+            <p style={{ color: '#777' }}>No non-consumables found.</p>
+          )}
+        </div>
+        <div className="manage-link">
+          <a href="/tools">&gt; Manage Non-Consumables</a>
         </div>
       </div>
-
+  
       <div className="chatbox">
         <div className="chat-messages">
           {messages.map((msg, index) => (
@@ -215,5 +239,6 @@ const RecipeChat = () => {
     </div>
   );
 };
+  
 
 export default RecipeChat;
