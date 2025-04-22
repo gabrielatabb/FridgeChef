@@ -263,4 +263,3 @@ def delete_non_consumable(item_name: str, user: User = Depends(get_current_user)
     db.delete(item)
     db.commit()
     return {"message": f"Non-consumable '{item_name}' deleted."}
-

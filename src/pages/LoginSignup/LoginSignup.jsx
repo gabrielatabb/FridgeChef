@@ -25,6 +25,7 @@ const LoginSignup = () => {
                 if (response.ok) {
                     localStorage.setItem("username", username);
                     localStorage.setItem("password", pass);
+                    setErrorMessage('')
                     navigate('/recipeChat');
                 } else {
                     const data = await response.json();
@@ -48,6 +49,7 @@ const LoginSignup = () => {
                 });
                 if (response.ok) {
                     alert("Sign up successful!");
+                    setErrorMessage('')
                     setAction("Login");
                 } else {
                     const data = await response.json();
