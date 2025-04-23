@@ -100,16 +100,16 @@ def get_current_user(credentials: HTTPBasicCredentials = Depends(security), db: 
 
 client = OpenAI(api_key=api_key)
 
-@app.post("/register")
+@app.post("/register") #Register a new user 
 def register_user(data: RegisterInput, db: Session = Depends(get_db)):
     if db.query(User).filter(User.username == data.username).first():
-        raise HTTPException(status_code=400, detail="Username already exists")
+        raise HTTPException(status_code=400, detail="Username already exists") #Check to see if the username exists already
     user = User(username=data.username, password=data.password)
     db.add(user)
     db.commit()
     return {"message": "User registered"}
 
-@app.post("/login")
+@app.post("/login") #Simple login function.
 def login(credentials: HTTPBasicCredentials = Depends(security), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == credentials.username).first()
     if user and secrets.compare_digest(user.password, credentials.password):
@@ -119,18 +119,18 @@ def login(credentials: HTTPBasicCredentials = Depends(security), db: Session = D
 @app.post("/store_ingredients/")
 def store_ingredients(data: IngredientInput, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     for item in data.ingredients:
-        db.add(Ingredient(user_id=user.id, name=item))
+        db.add(Ingredient(user_id=user.id, name=item)) #Add ingredients to the database BY user ensuring compliant with security practices.
     db.commit()
     return {"message": "Ingredients saved", "ingredients": data.ingredients}
 
 @app.get("/get_ingredients/")
-def get_ingredients(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def get_ingredients(user: User = Depends(get_current_user), db: Session = Depends(get_db)): #Simply get the ingredients, this was used for testing originally but now generates the list on front-end.
     ingredients = db.query(Ingredient).filter(Ingredient.user_id == user.id).all()
     if not ingredients:
         raise HTTPException(status_code=404, detail="No ingredients found")
     return {"ingredients": [ing.name for ing in ingredients]}
 
-@app.post("/generate_recipe/")
+@app.post("/generate_recipe/") #Recipe generation, sends prompt, ingredients, and "non-perishables" to GPT-3.5
 def generate_recipe(
     request: RecipeRequest,
     user: User = Depends(get_current_user),
@@ -149,7 +149,7 @@ def generate_recipe(
     tools = db.query(NonConsumable).filter(NonConsumable.user_id == user.id).all()
     tool_list = ", ".join([tool.name for tool in tools])
     prompt = (
-        f"User request: {request.prompt}\n"
+        f"User request: {request.prompt}\n" #I'm not sure if this is the best practice but I found this was the best "script" to send to GPT
         f"Available ingredients: {ingredient_list}\n"
         f"Available tools and spices: {tool_list}\n"
         "Respond with a recipe that fits the request, uses some of the available ingredients (not all required), BUT only use the ingredients, tools, and spices available to you in the list. The recipe can be "
@@ -163,7 +163,7 @@ def generate_recipe(
         )
         recipe_text = response.choices[0].message.content
 
-        new_recipe = GeneratedRecipe(user_id=user.id, recipe_text=recipe_text)
+        new_recipe = GeneratedRecipe(user_id=user.id, recipe_text=recipe_text) #Recipe saved with userID for security.
         db.add(new_recipe)
         db.commit()
 
@@ -187,7 +187,7 @@ def accept_recipe(request: AcceptRecipeRequest, user: User = Depends(get_current
 
     recipe_text = latest_recipe.recipe_text.lower()
 
-    if request.accept:
+    if request.accept: #Clear used ingredients to fulfill request.
         all_ingredients = db.query(Ingredient).filter(Ingredient.user_id == user.id).all()
         used, kept = [], []
 
@@ -215,7 +215,7 @@ def accept_recipe(request: AcceptRecipeRequest, user: User = Depends(get_current
     return {"message": "Okay! Recipe will not be saved and ingredients will not be removed. Please enter another prompt!"}
 
 
-@app.get("/get_saved_recipes/")
+@app.get("/get_saved_recipes/") #For output to front-end
 def get_saved_recipes(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     recipes = db.query(SavedRecipe).filter(SavedRecipe.user_id == user.id).all()
     return {"recipes": [r.recipe_text for r in recipes]}
@@ -238,7 +238,7 @@ def delete_ingredient(ingredient_name: str, user: User = Depends(get_current_use
 
 
 
-@app.post("/store_non_consumables/")
+@app.post("/store_non_consumables/") #same as ingredient storage, non-consumable new database member
 def store_non_consumables(data: NonConsumableInput, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     for item in data.non_consumables:
         db.add(NonConsumable(user_id=user.id, name=item))

@@ -6,8 +6,8 @@ const ProductTools = () => {
   const [tools, setTools] = useState([]);
   const [savedTools, setSavedTools] = useState([]);
 
-  useEffect(() => {
-    const fetchSavedTools = async () => {
+  useEffect(() => { //This file is the exact same as product.jsx with the addition and deletion of items but is in a separate list because these are removed unless
+    const fetchSavedTools = async () => { //pushed by the user.
       const username = localStorage.getItem("username");
       const password = localStorage.getItem("password");
 
@@ -70,7 +70,7 @@ const ProductTools = () => {
         'Authorization': 'Basic ' + btoa(username + ':' + password),
       },
       body: JSON.stringify({
-        non_consumables: tools, // ✅ FIXED key
+        non_consumables: tools, 
       }),
     });
   

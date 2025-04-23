@@ -1,4 +1,4 @@
-export default function About() {
+export default function About() { //Simple about page, all data that is inputted and outputted through this file
     return (
       <div style={{ padding: '40px', maxWidth: '800px', margin: 'auto', fontFamily: 'Segoe UI, sans-serif', lineHeight: '1.7' }}>
         <h1 style={{ color: '#EC6D53', fontSize: '40px', marginBottom: '20px' }}>About FridgeChef</h1>

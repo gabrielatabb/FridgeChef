@@ -61,6 +61,7 @@ const RecipeChat = () => {
         headers: {
           Authorization: 'Basic ' + btoa(username + ':' + password)
         }
+        
       });
       const data = await response.json();
       setSavedRecipes(data.recipes || []);
