@@ -41,8 +41,8 @@ export default function Home() {
                         loop
                         playsInline
                         style={{
-                            width: "150%",
-                            maxWidth: "12000px",
+                            width: "110%",
+                            maxWidth: "1200px",
                             height: "auto",
                             borderRadius: "20px",
                             boxShadow: "0 0 20px rgba(0, 0, 0, 0.3)"
