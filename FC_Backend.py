@@ -9,11 +9,10 @@ import uvicorn
 import os
 import logging
 from dotenv import load_dotenv
+load_dotenv()
 import secrets
 
 app = FastAPI()
-
-load_dotenv()
 
 api_key = os.getenv("OPENAI_API_KEY")
 if not api_key:
